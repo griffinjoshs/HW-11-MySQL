@@ -108,6 +108,13 @@ function employeeSearch(searchType) {
       });
       break;
     case "manager":
+      query = `select e.first_name as "emp first", e.last_name as "emp last", m.first_name as "mgr first", m.last_name as "mgr last"
+    from employee as e, employee as m, manages as mg
+    where mg.employee_id = e.id and mg.manager_id = m.id`;
+      query += ' order by m.last_name, m.first_name'
+      connection.query(query, null, function (err, res) {
+        console.table(res)
+      });
       break;
     default:
       throw "employee search called in illegal argument";
