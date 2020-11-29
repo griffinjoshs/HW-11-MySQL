@@ -3,83 +3,130 @@ var inquirer = require("inquirer");
 var connection = mysql.createConnection({
   host: "localhost",
   // Your port; if not 3306
-  port = 3306,
+  port: 3306,
   // Your username
   user: "root",
   // Your password
   password: "password",
   database: "employeeTracker"
 });
-connection.connect(function(err) {
+let query;
+let allDepartments = [];
+connection.connect(function (err) {
   if (err) throw err;
-  runSearch();
+  query = `select d.name 
+    from department as d`;
+  connection.query(query, null, function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      allDepartments.push(res[i].name)
+    }
+    runSearch();
+  })
 });
 function runSearch() {
-  inquirer
-    .prompt({
-      name: "action",
-      type: "rawlist",
-      message: "What would you like to do?",
-      choices: [
-        "View All Employees",
-        "View All Employees by department",
-        "View All Employees by Name",
-        "View All Employees by Manager",
-        "Remove Employee",
-        "Add Employee",
-        "Update Employee",
-        "Add Department",
-        "Add Roll",
-      ]
-    })
-    .then(function(answer) {
-      switch (answer.action) {
-      case "View All Employees":
-        employeeSearch();
-        break;
-      case "View All Employees by department":
-        employeeSearch();
-        break;
-      case "View All Employees by Name":
-        employeeSearch();
-        break;
-      case "View All Employees by Manager":
-        employeeSearch();
-        break;
-      case "Remove Employee":
-        departmentSearch();
-        break;
-        case "Add Employee":
-        departmentSearch();
-        break;
-        case "Update Employee":
-        departmentSearch();
-        break;
-        case "Add Department":
-        departmentSearch();
-        break;
-        case "Add Roll":
-        departmentSearch();
-        break;
-      }
-    });
-}
-function employeeSearch() {
-  inquirer
-    .prompt({
-      name: "employee",
-      type: "input",
-      message: "What employee would you like to search for?"
-    })
-    .then(function(answer) {
-      var query = "SELECT employee, year FROM employeeTracker WHERE ?";
-      connection.query(query, { employee: answer.employee }, function(err, res) {
-        for (var i = 0; i < res.length; i++) {
-          console.log("Position: " + res[i].position + " || Employee: " + res[i].song + " || Year: " + res[i].year);
+    inquirer
+      .prompt({
+        name: "action",
+        type: "rawlist",
+        message: "What would you like to do?",
+        choices: [
+          "View All Employees",
+          "View All Employees by department",
+          "View All Employees by Name",
+          "View All Employees by Manager",
+          "Remove Employee",
+          "Add Employee",
+          "Update Employee",
+          "Add Department",
+          "Add Roll",
+          "Quit"
+        ]
+      })
+      .then(function (answer) {
+        // if (answer.action === "Quit"){
+        //   break;
+        // }
+        switch (answer.action) {
+          case "View All Employees":
+            employeeSearch('all');
+            break;
+          case "View All Employees by department":
+            employeeSearch('department');
+            break;
+          case "View All Employees by Name":
+            employeeSearch('name');
+            break;
+          case "View All Employees by Manager":
+            employeeSearch('manager');
+            break;
+          case "Remove Employee":
+            removeEmployee();
+            break;
+          case "Add Employee":
+            addEmployee();
+            break;
+          case "Update Employee":
+            updateEmployee();
+            break;
+          case "Add Department":
+            addDepartment();
+            break;
+          case "Add Roll":
+            updateRoll();
+            break;
+          case "Quit":
+            return;
         }
-        employeeSearch();
       });
-    });
+}
+function employeeSearch(searchType) {
+  switch (searchType) {
+    case "all":
+      query = `select e.id, e.first_name, e.last_name, r.title, r.salary, d.name 
+    from employee as e, role as r, department as d
+    where e.role_id = r.id and r.department_id = d.id`;
+      connection.query(query, null, function (err, res) {
+        console.table(res)
+      })
+      break;
+    case "department":
+      query = `select e.id, e.first_name, e.last_name, r.title, r.salary, d.name 
+    from employee as e, role as r, department as d
+    where e.role_id = r.id and r.department_id = d.id`;
+      query += ' order by d.name'
+      connection.query(query, null, function (err, res) {
+        console.table(res)
+      });
+      break;
+    case "name":
+      query = `select e.id, e.first_name, e.last_name, r.title, r.salary, d.name 
+    from employee as e, role as r, department as d
+    where e.role_id = r.id and r.department_id = d.id`;
+      query += ' order by e.last_name, e.first_name'
+      connection.query(query, null, function (err, res) {
+        console.table(res)
+      });
+      break;
+    case "manager":
+      break;
+    default:
+      throw "employee search called in illegal argument";
+  }
+  // inquirer
+  //   .prompt({
+  //     name: "employee",
+  //     type: "input",
+  //     message: "What employee would you like to search for?"
+  //   })
+  //   .then(function (answer) {
+  //     var query = "SELECT employee, year FROM employeeTracker WHERE ?";
+  //     connection.query(query, { employee: answer.employee }, function (err, res) {
+  //       for (var i = 0; i < res.length; i++) {
+  //         console.log("Position: " + res[i].position + " || Employee: " + res[i].song + " || Year: " + res[i].year);
+  //       }
+  //       employeeSearch();
+  //     });
+  //   });
 }
 // function multiSearch() {
 //   var query = "SELECT employee FROM top5000 GROUP BY employee HAVING count(*) > 1";
