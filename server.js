@@ -24,60 +24,60 @@ connection.connect(function (err) {
   })
 });
 function runSearch() {
-    inquirer
-      .prompt({
-        name: "action",
-        type: "rawlist",
-        message: "What would you like to do?",
-        choices: [
-          "View All Employees",
-          "View All Employees by department",
-          "View All Employees by Name",
-          "View All Employees by Manager",
-          "Remove Employee",
-          "Add Employee",
-          "Update Employee",
-          "Add Department",
-          "Add Roll",
-          "Quit"
-        ]
-      })
-      .then(function (answer) {
-        // if (answer.action === "Quit"){
-        //   break;
-        // }
-        switch (answer.action) {
-          case "View All Employees":
-            employeeSearch('all');
-            break;
-          case "View All Employees by department":
-            employeeSearch('department');
-            break;
-          case "View All Employees by Name":
-            employeeSearch('name');
-            break;
-          case "View All Employees by Manager":
-            employeeSearch('manager');
-            break;
-          case "Remove Employee":
-            removeEmployee();
-            break;
-          case "Add Employee":
-            addEmployee();
-            break;
-          case "Update Employee":
-            updateEmployee();
-            break;
-          case "Add Department":
-            addDepartment();
-            break;
-          case "Add Roll":
-            updateRoll();
-            break;
-          case "Quit":
-            return;
-        }
-      });
+  inquirer
+    .prompt({
+      name: "action",
+      type: "rawlist",
+      message: "What would you like to do?",
+      choices: [
+        "View All Employees",
+        "View All Employees by department",
+        "View All Employees by Name",
+        "View All Employees by Manager",
+        "Remove Employee",
+        "Add Employee",
+        "Update Employee",
+        "Add Department",
+        "Add Roll",
+        "Quit"
+      ]
+    })
+    .then(function (answer) {
+      // if (answer.action === "Quit"){
+      //   break;
+      // }
+      switch (answer.action) {
+        case "View All Employees":
+          employeeSearch('all');
+          break;
+        case "View All Employees by department":
+          employeeSearch('department');
+          break;
+        case "View All Employees by Name":
+          employeeSearch('name');
+          break;
+        case "View All Employees by Manager":
+          employeeSearch('manager');
+          break;
+        case "Remove Employee":
+          removeEmployee();
+          break;
+        case "Add Employee":
+          addEmployee();
+          break;
+        case "Update Employee":
+          updateEmployee();
+          break;
+        case "Add Department":
+          addDepartment();
+          break;
+        case "Add Roll":
+          updateRoll();
+          break;
+        case "Quit":
+          return;
+      }
+    });
 }
 function employeeSearch(searchType) {
   switch (searchType) {
@@ -119,6 +119,43 @@ function employeeSearch(searchType) {
     default:
       throw "employee search called in illegal argument";
   }
+}
+function removeEmployee() {
+  let allEmployees = [];
+  query = `select e.id, e.first_name, e.last_name 
+    from employee as e
+    order by e.id`
+  connection.query(query, null, function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      allEmployees.push(
+        `id: ${res[i].id}, ${res[i].first_name} ${res[i].last_name}`
+      )
+    }
+    inquirer
+      .prompt({
+        name: 'employee',
+        type: 'list',
+        message: 'which employee do you wish to delete?',
+        choices: allEmployees
+      })
+      .then(function (answer) {
+        console.log(answer)
+        let id = parseInt(answer.employee.substring(4));
+        query = `delete from employee where id = ${id}`
+        connection.query(query, null, function (err, res) {
+          if (err) {
+            console.warn('operation failed');
+          }
+          else {
+            console.log(`employee ${id} deleted`)
+          }
+        }
+        )
+
+      })
+  })
+}
+
   // inquirer
   //   .prompt({
   //     name: "employee",
@@ -134,7 +171,7 @@ function employeeSearch(searchType) {
   //       employeeSearch();
   //     });
   //   });
-}
+
 // function multiSearch() {
 //   var query = "SELECT employee FROM top5000 GROUP BY employee HAVING count(*) > 1";
 //   connection.query(query, function(err, res) {
