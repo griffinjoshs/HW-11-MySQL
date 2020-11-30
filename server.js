@@ -38,7 +38,7 @@ function runSearch() {
         "Add Employee",
         "Update Employee",
         "Add Department",
-        "Add Roll",
+        "Add Role",
         "Quit"
       ]
     })
@@ -72,7 +72,7 @@ function runSearch() {
           addDepartment();
           break;
         case "Add Roll":
-          updateRoll();
+          addRoll();
           break;
         case "Quit":
           return;
@@ -151,135 +151,139 @@ function removeEmployee() {
           }
         }
         )
-
       })
   })
 }
 
-  // inquirer
-  //   .prompt({
-  //     name: "employee",
-  //     type: "input",
-  //     message: "What employee would you like to search for?"
-  //   })
-  //   .then(function (answer) {
-  //     var query = "SELECT employee, year FROM employeeTracker WHERE ?";
-  //     connection.query(query, { employee: answer.employee }, function (err, res) {
-  //       for (var i = 0; i < res.length; i++) {
-  //         console.log("Position: " + res[i].position + " || Employee: " + res[i].song + " || Year: " + res[i].year);
-  //       }
-  //       employeeSearch();
-  //     });
-  //   });
+function addEmployee() {
+  let employeeRole = [];
+  query = `select r.id, r.title
+  from role as r`
 
-// function multiSearch() {
-//   var query = "SELECT employee FROM top5000 GROUP BY employee HAVING count(*) > 1";
-//   connection.query(query, function(err, res) {
-//     for (var i = 0; i < res.length; i++) {
-//       console.log(res[i].employee);
-//     }
-//     employeeSearch();
-//   });
-// }
-// function rangeSearch() {
-//   inquirer
-//     .prompt([
-//       {
-//         name: "start",
-//         type: "input",
-//         message: "Enter starting position: ",
-//         validate: function(value) {
-//           if (isNaN(value) === false) {
-//             return true;
-//           }
-//           return false;
-//         }
-//       },
-//       {
-//         name: "end",
-//         type: "input",
-//         message: "Enter ending position: ",
-//         validate: function(value) {
-//           if (isNaN(value) === false) {
-//             return true;
-//           }
-//           return false;
-//         }
-//       }
-//     ])
-//     .then(function(answer) {
-//       var query = "SELECT position,song,employee,year FROM top5000 WHERE position BETWEEN ? AND ?";
-//       connection.query(query, [answer.start, answer.end], function(err, res) {
-//         for (var i = 0; i < res.length; i++) {
-//           console.log(
-//             "Position: " +
-//               res[i].position +
-//               " || Song: " +
-//               res[i].song +
-//               " || employee: " +
-//               res[i].employee +
-//               " || Year: " +
-//               res[i].year
-//           );
-//         }
-//         runSearch();
-//       });
-//     });
-// }
+  connection.query(query, null, function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      employeeRole.push(
+        `${res[i].id}: ${res[i].title}`
+      )
+    }
+  })
 
-// function songSearch() {
-//   inquirer
-//     .prompt({
-//       name: "song",
-//       type: "input",
-//       message: "What song would you like to look for?"
-//     })
-//     .then(function(answer) {
-//       console.log(answer.song);
-//       connection.query("SELECT * FROM top5000 WHERE ?", { song: answer.song }, function(err, res) {
-//         console.log(
-//           "Position: " +
-//             res[0].position +
-//             " || Song: " +
-//             res[0].song +
-//             " || employee: " +
-//             res[0].employee +
-//             " || Year: " +
-//             res[0].year
-//         );
-//         runSearch();
-//       });
-//     });
-// }
-// function departmentSearch() {
-//   inquirer
-//     .prompt({
-//       name: "employee",
-//       type: "input",
-//       message: "What employee would you like to search for?"
-//     })
-//     .then(function(answer) {
-//       var query = "SELECT top_albums.year, top_albums.album, top_albums.position, top5000.song, top5000.employee ";
-//       query += "FROM top_albums INNER JOIN top5000 ON (top_albums.employee = top5000.employee AND top_albums.year ";
-//       query += "= top5000.year) WHERE (top_albums.employee = ? AND top5000.employee = ?) ORDER BY top_albums.year, top_albums.position";
-//       connection.query(query, [answer.employee, answer.employee], function(err, res) {
-//         console.log(res.length + " matches found!");
-//         for (var i = 0; i < res.length; i++) {
-//           console.log(
-//             i+1 + ".) " +
-//               "Year: " +
-//               res[i].year +
-//               " Album Position: " +
-//               res[i].position +
-//               " || employee: " +
-//               res[i].employee +
-//               " || Song: " +
-//               res[i].song +
-//               " || Album: " +
-//               res[i].album
-//           );
-//         }
-//         runSearch();
-//       });
-//     });
-// }
+  inquirer
+    .prompt([
+      {
+        name: 'first_name',
+        type: 'input',
+        message: 'Please type the employees first name.',
+      },
+      {
+        name: 'last_name',
+        type: 'input',
+        message: 'Please type the employees last name.',
+      },
+      {
+        name: 'role',
+        type: 'list',
+        message: 'What is the employees role?',
+        choices: employeeRole
+      },
+    ])
+    .then(function (answer) {
+      console.log(answer)
+      let role_id = parseInt(answer.role);
+      // console.log({role_id, answer})
+      query = `insert into employee (first_name, last_name, role_id) values ('${answer.first_name}', '${answer.last_name}', ${role_id})`
+      // console.log(query)
+      connection.query(query, null, function (err, res) {
+        if (err) {
+          console.warn('operation failed');
+        }
+        else {
+          console.log(`employee ${answer.first_name} ${answer.last_name} inserted`)
+        }
+      }
+      )
+    })
+}
+function updateEmployee() {
+  let employeeRole = [];
+  query = `select r.id, r.title
+  from role as r`
+
+  connection.query(query, null, function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      employeeRole.push(
+        `${res[i].id}: ${res[i].title}`
+      )
+    }
+  })
+  let allEmployees = [];
+  query = `select e.id, e.first_name, e.last_name 
+    from employee as e
+    order by e.id`
+  connection.query(query, null, function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      allEmployees.push(
+        `id: ${res[i].id}, ${res[i].first_name} ${res[i].last_name}`
+      )
+    }
+    inquirer
+      .prompt({
+        name: 'employee',
+        type: 'list',
+        message: 'which employee do you wish to edit?',
+        choices: allEmployees
+      })
+      .then(function (answer) {
+        console.log(answer)
+        let id = parseInt(answer.employee.substring(4));
+        query = `select first_name, last_name, role_id 
+  from employee
+  where id = ${id}`
+        connection.query(query, null, function (err, res) {
+          if (err) {
+            console.warn('operation failed');
+          }
+          else {
+            console.log(`employee ${id} data`)
+            inquirer
+            const questions = [
+              {
+                type: 'input',
+                name: 'first_name',
+                message: 'change the first name',
+                default: res[0].first_name
+              },
+              {
+                type: 'input',
+                name: 'last_name',
+                message: 'change the last name',
+                default: res[0].last_name
+              },
+              {
+                type: 'list',
+                name: 'role_id',
+                message: 'change employee role',
+                default: employeeRole.filter(r => parseInt(r) === res[0].role_id)[0],
+                choices: employeeRole
+              },
+            ];
+
+            inquirer.prompt(questions).then((answers) => {
+              query = `UPDATE employee
+              SET first_name = '${answers.first_name}', '${answers.last_name}', '${parseInt(answers.role_id)}'
+              WHERE condition`
+              if (err) {
+                console.warn('operation failed');
+              }
+              else {
+                console.log(`success`)
+              }
+              console.log(answers);
+            });
+          }
+        }
+        )
+      })
+  })
+}
+

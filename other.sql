@@ -1,4 +1,4 @@
--- insert into department values (1, "development")
+insert into department values (1, "development")
 insert into department values (2, "marketing")
 
 select * from department
@@ -20,3 +20,9 @@ insert into employee values (106, "Amy", "Smith", 72);
 select e.id, e.first_name, e.last_name, r.title, r.salary, d.name 
 from employee as e, role as r, department as d
 where e.role_id = r.id and r.department_id = d.id
+
+
+
+`UPDATE employee
+ SET first_name = '${answers.first_name}', '${answers.last_name}', '${parseInt(answers.role_id)}'
+ WHERE condition`; 
