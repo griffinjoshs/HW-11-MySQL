@@ -287,3 +287,41 @@ function updateEmployee() {
   })
 }
 
+function addDepartment() {
+  let departmentRole = [];
+  query = `select d.name
+    from department as d`
+
+  connection.query(query, null, function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      departmentRole.push(
+        `${res[i].name}`
+      )
+    }
+  })
+
+  inquirer
+    .prompt([
+      {
+        name: 'department_name',
+        type: 'input',
+        message: 'Please type the new departments name.',
+      },
+    ])
+    .then(function (answer) {
+      console.log(answer)
+      let role_id = parseInt(answer.role);
+      // console.log({role_id, answer})
+      query = `insert into department (name) values ('${answer.name}')`
+      // console.log(query)
+      connection.query(query, null, function (err, res) {
+        if (err) {
+          console.warn('operation failed');
+        }
+        else {
+          console.log(`department ${answer.name} inserted`)
+        }
+      }
+      )
+    })
+}
