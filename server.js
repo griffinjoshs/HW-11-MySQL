@@ -11,18 +11,7 @@ var connection = mysql.createConnection({
   database: "employeeTracker"
 });
 let query;
-let allDepartments = [];
-connection.connect(function (err) {
-  if (err) throw err;
-  query = `select d.name 
-    from department as d`;
-  connection.query(query, null, function (err, res) {
-    for (let i = 0; i < res.length; i++) {
-      allDepartments.push(res[i].name)
-    }
-    runSearch();
-  })
-});
+
 function runSearch() {
   inquirer
     .prompt({
@@ -42,10 +31,7 @@ function runSearch() {
         "Quit"
       ]
     })
-    .then(function (answer) {
-      // if (answer.action === "Quit"){
-      //   break;
-      // }
+    .then(function(answer){
       switch (answer.action) {
         case "View All Employees":
           employeeSearch('all');
@@ -71,13 +57,14 @@ function runSearch() {
         case "Add Department":
           addDepartment();
           break;
-        case "Add Roll":
-          addRoll();
+        case "Add Role":
+          addRole();
           break;
         case "Quit":
-          return;
+          running = false;
+          break;
       }
-    });
+    })
 }
 function employeeSearch(searchType) {
   switch (searchType) {
@@ -139,7 +126,6 @@ function removeEmployee() {
         choices: allEmployees
       })
       .then(function (answer) {
-        console.log(answer)
         let id = parseInt(answer.employee.substring(4));
         query = `delete from employee where id = ${id}`
         connection.query(query, null, function (err, res) {
@@ -188,11 +174,10 @@ function addEmployee() {
       },
     ])
     .then(function (answer) {
-      console.log(answer)
       let role_id = parseInt(answer.role);
-      // console.log({role_id, answer})
+      answer.first_name = answer.first_name.trim()
+      answer.last_name = answer.last_name.trim()
       query = `insert into employee (first_name, last_name, role_id) values ('${answer.first_name}', '${answer.last_name}', ${role_id})`
-      // console.log(query)
       connection.query(query, null, function (err, res) {
         if (err) {
           console.warn('operation failed');
@@ -234,7 +219,6 @@ function updateEmployee() {
         choices: allEmployees
       })
       .then(function (answer) {
-        console.log(answer)
         let id = parseInt(answer.employee.substring(4));
         query = `select first_name, last_name, role_id 
   from employee
@@ -244,7 +228,6 @@ function updateEmployee() {
             console.warn('operation failed');
           }
           else {
-            console.log(`employee ${id} data`)
             inquirer
             const questions = [
               {
@@ -270,15 +253,17 @@ function updateEmployee() {
 
             inquirer.prompt(questions).then((answers) => {
               query = `UPDATE employee
-              SET first_name = '${answers.first_name}', '${answers.last_name}', '${parseInt(answers.role_id)}'
-              WHERE condition`
-              if (err) {
-                console.warn('operation failed');
-              }
-              else {
-                console.log(`success`)
-              }
-              console.log(answers);
+              SET first_name = '${answers.first_name}', 
+              last_name = '${answers.last_name}', role_id = ${parseInt(answers.role_id)}
+              WHERE id = ${id}`
+              connection.query(query, null, function (err, res) {
+                if (err) {
+                  console.warn('operation failed', err);
+                }
+                else {
+                  console.log(`success`)
+                }
+              })
             });
           }
         }
@@ -288,18 +273,6 @@ function updateEmployee() {
 }
 
 function addDepartment() {
-  let departmentRole = [];
-  query = `select d.name
-    from department as d`
-
-  connection.query(query, null, function (err, res) {
-    for (let i = 0; i < res.length; i++) {
-      departmentRole.push(
-        `${res[i].name}`
-      )
-    }
-  })
-
   inquirer
     .prompt([
       {
@@ -309,20 +282,63 @@ function addDepartment() {
       },
     ])
     .then(function (answer) {
-      console.log(answer)
-      let role_id = parseInt(answer.role);
-      // console.log({role_id, answer})
-      query = `insert into department (name) values ('${answer.name}')`
-      // console.log(query)
+      answer.department_name = answer.department_name.trim()
+      query = `insert into department (name) values ('${answer.department_name}')`
       connection.query(query, null, function (err, res) {
         if (err) {
           console.warn('operation failed');
         }
         else {
-          console.log(`department ${answer.name} inserted`)
+          console.log(`department ${answer.department_name} inserted`)
         }
       }
       )
     })
 }
 
+function addRole() {
+  let allDepartments = [];
+  query = `select id, name from department`
+  connection.query(query, null, function (err, res) {
+    for (let i = 0; i < res.length; i++) {
+      allDepartments.push(
+        `${res[i].id}: ${res[i].name}`
+      )
+    }
+    inquirer
+      .prompt([
+        {
+          name: 'title',
+          type: 'input',
+          message: 'Please type the new Role name.',
+        },
+        {
+          name: 'salary',
+          type: 'input',
+          message: 'Please type the salary.',
+        },
+        {
+          name: 'department_id',
+          type: 'list',
+          message: 'Select a department.',
+          choices: allDepartments
+        },
+      ])
+      .then(function (answer) {
+        answer.title = answer.title.trim()
+        query = `insert into role (title, salary, department_id) 
+      values ('${answer.title}', ${parseFloat(answer.salary)}, ${parseInt(answer.department_id)})`
+        connection.query(query, null, function (err, res) {
+          if (err) {
+            console.warn('operation failed');
+          }
+          else {
+            console.log(`Role ${answer.title} inserted`)
+          }
+        }
+        )
+      })
+  }
+  )
+} 
+runSearch();
